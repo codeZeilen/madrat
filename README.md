@@ -17,7 +17,7 @@ Provides a framework which should improve reproducibility and
 
 
 ## Installation
-
+ 
 For installation of the most recent package version an additional repository has to be added in R:
 
 ```r
