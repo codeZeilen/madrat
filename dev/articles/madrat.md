@@ -101,7 +101,7 @@ madrat:::downloadTau
 #>             volume = "232", pages = "109-118", url = "https://doi.org/10.1016/j.ecolmodel.2012.03.002", 
 #>             doi = "10.1016/j.ecolmodel.2012.03.002")))
 #> }
-#> <bytecode: 0x561e693d3ce8>
+#> <bytecode: 0x55ffa51d0ee0>
 #> <environment: namespace:madrat>
 ```
 
@@ -143,7 +143,7 @@ madrat:::readTau
 #>     x[x == -999] <- NA
 #>     return(x)
 #> }
-#> <bytecode: 0x561e6af632c8>
+#> <bytecode: 0x55ffa6d6ec20>
 #> <environment: namespace:madrat>
 ```
 
@@ -207,7 +207,7 @@ madrat:::convertTau
 #>     xref <- toolCountryFill(xref, fill = 0, verbosity = 2)
 #>     return(mbind(tau, xref))
 #> }
-#> <bytecode: 0x561e6b733b90>
+#> <bytecode: 0x55ffa753d638>
 #> <environment: namespace:madrat>
 ```
 
@@ -266,7 +266,7 @@ madrat:::calcTauTotal
 #>             pages = "109-118", url = "https://doi.org/10.1016/j.ecolmodel.2012.03.002", 
 #>             doi = "10.1016/j.ecolmodel.2012.03.002")))
 #> }
-#> <bytecode: 0x561e6c3dec00>
+#> <bytecode: 0x55ffa81e7b40>
 #> <environment: namespace:madrat>
 ```
 
@@ -316,7 +316,7 @@ madrat:::fullEXAMPLE
 #>     }
 #>     return(list(tag = "customizable_tag", pucTag = "tag"))
 #> }
-#> <bytecode: 0x561e6d23ebc8>
+#> <bytecode: 0x55ffa9048898>
 #> <environment: namespace:madrat>
 ```
 
