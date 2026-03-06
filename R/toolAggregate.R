@@ -161,7 +161,7 @@ toolAggregate <- function(x,
   } else {
     result <- toolAggregateUnweighted(x = x, rel = rel, to = to, dim = dim, xComment = xComment)
   }
-  return(removeEmptyResultItems(result))
+  return(removeEmptyResultItems(result, dim = dim))
 }
 
 toolAggregateWeighted <- function(x, rel, weight, from, to, dim, wdim, partrel,
@@ -422,10 +422,10 @@ toolGetAggregationMatrix <- function(rel, from = NULL, to = NULL, items = NULL, 
     }
   }
 
-  regions <- as.character(unique(rel[, to]))
-  countries <- as.character(unique(rel[, from]))
-  m <- Matrix::Matrix(data = 0, nrow = length(regions), ncol = length(countries),
-                      dimnames = list(regions = regions, countries = countries))
+  toItems <- as.character(unique(rel[, to]))
+  fromItems <- as.character(unique(rel[, from]))
+  m <- Matrix::Matrix(data = 0, nrow = length(toItems), ncol = length(fromItems),
+                      dimnames = list(toItems = toItems, fromItems = fromItems))
   m[cbind(match(rel[, to], rownames(m)), match(rel[, from], colnames(m)))] <- 1
   if (is.numeric(to)) {
     to <- dimnames(rel)[[2]][to]
@@ -495,19 +495,15 @@ toolMapFromRel <- function(rel, from, to) {
   return(map)
 }
 
-removeEmptyResultItems <- function(m) {
-  emptyValues <- c("NULL", "", NA)
-  if (any(emptyValues %in% unlist(getItems(m, split = TRUE)))) {
+removeEmptyResultItems <- function(m, dim) {
+  dim <- floor(dim)
+  if (any("" %in% unlist(getItems(m, dim = dim)))) {
     vcat(1, "Aggregation target included \"\". Those items were removed from aggregation result.")
 
-    .dimContainsEmptyValue <- function(m, dim) {
-      return(any(emptyValues %in% unlist(getItems(m, dim = dim))))
+    if (any("" %in% unlist(getItems(m, dim = dim)))) {
+      m <- m["", dim = dim, invert = TRUE]
     }
-    for (i in 1:3) {
-      if (.dimContainsEmptyValue(m, i)) {
-        m <- m[emptyValues, dim = i, invert = TRUE]
-      }
-    }
+
     return(m)
   } else {
     return(m)
