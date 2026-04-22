@@ -342,6 +342,11 @@ calcOutput <- function(type, aggregate = TRUE, file = NULL, years = NULL, # noli
     # select fitting relation mappings and merge them if there is more than one
     if (x$class != "magpie") stop("Aggregation can only be used in combination with x$class=\"magpie\"!")
 
+    if (!x$isocountries) {
+      # We do not yet have isocountries, so we might need to do a preaggregation
+      x$x <- .optionalToIsoAggregation(x$x)
+    }
+
     # prepare mappings and aggregate argument for aggregation
     map <- .getMapping(aggregate, type, x$x)
 
@@ -506,6 +511,30 @@ calcOutput <- function(type, aggregate = TRUE, file = NULL, years = NULL, # noli
                      fname = callString,
                      add = TRUE)
   }
+}
+
+.optionalToIsoAggregation <- function(x) {
+  isoList <- getISOlist()
+
+  # Sanity-check if data is already in iso
+  if (setequal(getItems(x, 1), isoList)) {
+    return(x)
+  }
+
+  # Is iso information already available in a sub-dimension?
+  items <- getItems(x, 1, split = TRUE)
+  isoSetNames <- Filter(function(setName) {
+    setequal(items[[setName]], unname(isoList))
+  }, names(items))
+  if (length(isoSetNames) > 0) {
+    return(toolAggregate(x, to = isoSetNames[[1]]))
+  }
+
+  # If no iso information available in sub-dimesion, then try
+  # to find a matching mapping
+  # TODO, for now we simply retrun x and run into problems later on
+
+  return(x)
 }
 
 .getMapping <- function(aggregate, type, x) { # nolint: cyclocomp_linter.

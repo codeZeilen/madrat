@@ -335,6 +335,98 @@ test_that("Aggregation works", {
 
 })
 
+# Design of new aggregation mechanism for madrat
+# - If data is already in isocountries: same as before, go straight to regions
+# - If data is not in isocountries (actual granularity should not matter at all):
+#  - Check whether data contains iso information, if yes, directly aggregate to iso, then continue with regions
+#  - If data contains no iso information at all:
+#    - Figure out which mappings map to isocountries
+#    - Look from the left for a mapping that matches the input data
+#    - If none is available: Fail
+#    - If one is available: Go to isocountries, then go to regions
+#
+# Test plan
+# - Data already in iso: Covered by above
+# - Data not in iso and aggregate TRUE (once with simple "region+global" one with additional region mapping)
+#  - Simple mapping given
+#  - Multiple mappings given
+#  - No mapping given
+#  - Mapping given but does not go to iso
+# - Data not in iso and aggregate FALSE
+# - Data not in iso and aggregate = "iso"
+#
+# TODO: Do we want to derive "mapppings" from data already contained in the magclass object?
+#
+
+calcXYCellData <- function() {
+  x <- collapseDim(maxample("animal"), c(1.3, 1.4))
+  return(list(x = x,
+              description = "Cellular aggregation test data",
+              unit = "some",
+              isocountries = FALSE))
+}
+
+# Build "x.y.country" spatial names: for each x/country, all 4 y values
+isoList <- getISOlist()
+spatialNames <- as.vector(sapply(seq_along(isoList), function(i) {
+  paste(i, 1:4, isoList[i], sep = ".")
+}))
+
+xyIsoData <- new.magpie(cells_and_regions = spatialNames, fill = 1, sets = c("x.y.justSomeName", "year", "data"))
+
+calcXYIsoCellData <- function() {
+  x <- xyIsoData
+  return(list(x = x,
+              description = "Cellular aggregation test data",
+              unit = "some",
+              isocountries = FALSE))
+}
+
+test_that("non-iso data with aggregate = FALSE is returned unchanged", {
+  localConfig(outputfolder = withr::local_tempdir(), verbosity = 0, .verbose = FALSE, globalenv = TRUE)
+  globalassign("calcXYCellData")
+
+  expect_equivalent(nc(calcOutput("XYCellData", aggregate = FALSE)),
+                    nc(collapseDim(maxample("animal"), c(1.3, 1.4))))
+})
+
+test_that("non-iso data aggregation", {
+  localConfig(outputfolder = withr::local_tempdir(), verbosity = 0, .verbose = FALSE, globalenv = TRUE)
+  globalassign("calcXYCellData")
+  globalassign("calcXYIsoCellData")
+
+  # data contains iso info
+  r <- nc(calcOutput("XYIsoCellData", aggregate = TRUE))
+  expect_setequal(getItems(r, dim = 1),
+                  c("LAM", "OAS", "SSA", "EUR", "NEU", "MEA", "REF", "CAZ", "CHA", "IND", "JPN", "USA"))
+
+  r <- nc(calcOutput("XYIsoCellData", aggregate = "global"))
+  expect_equivalent(as.numeric(r),
+                    as.numeric(dimSums(xyIsoData, dim = 1)))
+
+  # data contains no iso info, mapping to iso countries given
+  mapping <- as.data.frame(maxample("animal"), rev = 3)[, c("x", "y", "country")]
+  mapping$iso <- mapping$country
+  mapping$country <- NULL
+  mapping$iso[mapping$iso == "BEL"] <- "ECU"
+  mapping$iso[mapping$iso == "BEL"] <- "EGY"
+  extraIsoMapFile <- withr::local_tempfile(fileext = ".csv")
+  write.csv(mapping, extraIsoMapFile)
+  localConfig(extramappings = extraIsoMapFile)
+
+  r <- nc(calcOutput("XYCellData", aggregate = TRUE))
+
+  expect_setequal(getItems(r, dim = 1),
+                  c("EUR", "ECU", "MEA"))
+  expect_equivalent(as.numeric(r),
+                    as.numeric(dimSums(maxample("animal"), dim = c("x", "y", "cell"))))
+
+
+  # aggregate but no suitable mapping given
+
+})
+
+
 test_that("aggregation error handling", {
   localConfig(outputfolder = withr::local_tempdir(), verbosity = 0, .verbose = FALSE)
 
