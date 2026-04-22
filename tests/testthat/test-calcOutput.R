@@ -257,27 +257,7 @@ test_that("Aggregation works", {
                 unit = "1",
                 isocountries = FALSE))
   }
-  calcMalformedAggregation <- function() {
-    x <- new.magpie(getISOlist(), fill = 1)
-    return(list(x = x,
-                weight = NULL,
-                description = "Aggregation test data 2",
-                unit = "1",
-                mixed_aggregation = TRUE,
-                aggregationFunction = 99))
-  }
-  calcMalformedAggregation2 <- function() {
-    x <- new.magpie(getISOlist(), fill = 1)
-    return(list(x = x,
-                weight = NULL,
-                description = "Aggregation test data 2",
-                unit = "1",
-                mixed_aggregation = TRUE,
-                aggregationArguments = 42,
-                aggregationFunction = function(x, rel, mixed_aggregation) return(as.magpie(1)))) # nolint
-  }
-  globalassign("calcAggregationTest", "calcAggregationTest2", "calcAggregationTest3", "calcAggregationTest4",
-               "calcMalformedAggregation", "calcMalformedAggregation2")
+  globalassign("calcAggregationTest", "calcAggregationTest2", "calcAggregationTest3", "calcAggregationTest4")
 
   reg <- new("magpie", .Data = structure(c(54, 49, 51, 34, 16, 21, 12,
                                            5, 4, 1, 1, 1), .Dim = c(12L, 1L, 1L),
@@ -317,8 +297,6 @@ test_that("Aggregation works", {
   expect_warning(a <- nc(calcOutput("AggregationTest", aggregate = "global+region+cheese")),
                  "Omitting cheese from aggregate")
   expect_identical(a, mbind(glo, reg))
-  expect_error(calcOutput("MalformedAggregation"), "must be a function")
-  expect_error(calcOutput("MalformedAggregation2"), "must be a list of function arguments")
 
   # Check whether duplicate columns from extramappings are ignored
   extraMapFile <- file.path(withr::local_tempdir(), "blub.csv")
@@ -355,6 +333,35 @@ test_that("Aggregation works", {
                      reg)
   })
 
+})
+
+test_that("aggregation error handling", {
+  localConfig(outputfolder = withr::local_tempdir(), verbosity = 0, .verbose = FALSE)
+
+  calcMalformedAggregation <- function() {
+    x <- new.magpie(getISOlist(), fill = 1)
+    return(list(x = x,
+                weight = NULL,
+                description = "Aggregation test data 2",
+                unit = "1",
+                mixed_aggregation = TRUE,
+                aggregationFunction = 99))
+  }
+  calcMalformedAggregation2 <- function() {
+    x <- new.magpie(getISOlist(), fill = 1)
+    return(list(x = x,
+                weight = NULL,
+                description = "Aggregation test data 2",
+                unit = "1",
+                mixed_aggregation = TRUE,
+                aggregationArguments = 42,
+                aggregationFunction = function(x, rel, mixed_aggregation) return(as.magpie(1)))) # nolint
+  }
+
+  globalassign("calcMalformedAggregation", "calcMalformedAggregation2")
+
+  expect_error(calcOutput("MalformedAggregation"), "must be a function")
+  expect_error(calcOutput("MalformedAggregation2"), "must be a list of function arguments")
 })
 
 test_that("1on1 country mappings do not alter the data", {

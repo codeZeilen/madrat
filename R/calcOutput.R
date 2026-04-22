@@ -510,6 +510,8 @@ calcOutput <- function(type, aggregate = TRUE, file = NULL, years = NULL, # noli
 
 .getMapping <- function(aggregate, type, x) { # nolint: cyclocomp_linter.
 
+  isoList <- getISOlist()
+
   .items2rel <- function(x) {
     rel <- data.frame(from = getItems(x, dim = 1), getItems(x, dim = 1, split = TRUE, full = TRUE))
     return(rel)
@@ -527,8 +529,8 @@ calcOutput <- function(type, aggregate = TRUE, file = NULL, years = NULL, # noli
   }
 
   # check if x is bilateral data
-  if (dim(x)[[1]] == length(getISOlist())^2) {
-    tmp <- expand.grid(getISOlist(), getISOlist(), stringsAsFactors = FALSE)
+  if (dim(x)[[1]] == length(isoList)^2) {
+    tmp <- expand.grid(isoList, isoList, stringsAsFactors = FALSE)
     bilateralElements <- paste0(tmp[[1]], ".", tmp[[2]])
     bilateral <- setequal(bilateralElements, getItems(x, dim = 1))
   } else {
@@ -536,38 +538,38 @@ calcOutput <- function(type, aggregate = TRUE, file = NULL, years = NULL, # noli
   }
 
   # create a list of all relation maps to consider
-  rel <- list()
+  rels <- list()
   relNames <- NULL
   for (r in c(getConfig("regionmapping"), getConfig("extramappings"))) {
-    rel[[r]] <- toolGetMapping(r, type = "regional", activecalc = type)
+    rels[[r]] <- toolGetMapping(r, type = "regional", activecalc = type)
     # rename column names from old to new convention, if necessary
-    if (any(names(rel[[r]]) == "CountryCode")) names(rel[[r]])[names(rel[[r]]) == "CountryCode"] <- "country"
-    if (any(names(rel[[r]]) == "RegionCode")) names(rel[[r]])[names(rel[[r]]) == "RegionCode"] <- "region"
-    if (is.null(rel[[r]]$global)) {
-      rel[[r]]$global <- "GLO"  # add global column
+    if (any(names(rels[[r]]) == "CountryCode")) names(rels[[r]])[names(rels[[r]]) == "CountryCode"] <- "country"
+    if (any(names(rels[[r]]) == "RegionCode")) names(rels[[r]])[names(rels[[r]]) == "RegionCode"] <- "region"
+    if (is.null(rels[[r]]$global)) {
+      rels[[r]]$global <- "GLO"  # add global column
     }
     # create bilateral mappings for country mappings if x is bilateral
-    if (bilateral && nrow(rel[[r]]) == length(getISOlist())) {
-      rel[[paste0(r, "bilateral")]] <- .bilateralMapping(rel[[r]])
+    if (bilateral && nrow(rels[[r]]) == length(isoList)) {
+      rels[[paste0(r, "bilateral")]] <- .bilateralMapping(rels[[r]])
     }
-    relNames <- union(relNames, names(rel[[r]]))
+    relNames <- union(relNames, names(rels[[r]]))
   }
   # add relation map based on spatial subdimensions
   if (!bilateral && ndim(x, dim = 1) > 1) {
-    rel[["items2rel"]] <- .items2rel(x)
-    if (is.null(rel[["items2rel"]]$global)) {
-      rel[["items2rel"]]$global <- "GLO"  # add global column
+    rels[["items2rel"]] <- .items2rel(x)
+    if (is.null(rels[["items2rel"]]$global)) {
+      rels[["items2rel"]]$global <- "GLO"  # add global column
     }
     # remove region column (if available) to prevent a mix-up with the region column in the
     # default country2region mapping
-    rel[["items2rel"]]$region <- NULL
-    relNames <- union(relNames, colnames(rel[["items2rel"]])[-1])
+    rels[["items2rel"]]$region <- NULL
+    relNames <- union(relNames, colnames(rels[["items2rel"]])[-1])
     # add mapping to regions if countries are present
-    if (setequal(rel[["items2rel"]]$country, getISOlist())) {
-      cn <- colnames(rel[["items2rel"]])
-      rel[["items2rel"]] <- merge(rel[["items2rel"]], rel[[1]], by = "country", sort = FALSE, suffixes = c("", ".y"))
+    if (setequal(rels[["items2rel"]]$country, isoList)) {
+      cn <- colnames(rels[["items2rel"]])
+      rels[["items2rel"]] <- merge(rels[["items2rel"]], rels[[1]], by = "country", sort = FALSE, suffixes = c("", ".y"))
       # sort region into 2nd place to set it as default aggregation if nothing else is specified (aggregate = TRUE)
-      rel[["items2rel"]] <- rel[["items2rel"]][union(c(cn[1], "region"), cn)]
+      rels[["items2rel"]] <- rels[["items2rel"]][union(c(cn[1], "region"), cn)]
     } else if (isTRUE(aggregate)) {
       stop("Cannot aggregate to regions as mapping is missing!")
     }
@@ -596,12 +598,12 @@ calcOutput <- function(type, aggregate = TRUE, file = NULL, years = NULL, # noli
 
   # find mappings that have the same (setequal) items (usually ISO countries) in any column as data (items)
   # lapply loops over the mappings, vapply loops over the columns of a mapping
-  columnHasItems <- lapply(rel, vapply, setequal, items, FUN.VALUE = logical(1))
+  columnHasItems <- lapply(rels, vapply, setequal, items, FUN.VALUE = logical(1))
   # extract the names of columns that have the same items as data
   columnNameWithItems <- lapply(columnHasItems, function(x) names(which(x)))
 
   # mappings must have the same length AND the same items as data
-  relFitting <- which(vapply(rel, nrow, FUN.VALUE = integer(1)) == length(items) &
+  relFitting <- which(vapply(rels, nrow, FUN.VALUE = integer(1)) == length(items) &
                         !vapply(columnNameWithItems, identical, character(0), FUN.VALUE = logical(1)))
 
   if (length(relFitting) == 0) {
@@ -610,7 +612,7 @@ calcOutput <- function(type, aggregate = TRUE, file = NULL, years = NULL, # noli
   }
 
   # keep mappings only that fit the data
-  rel <- rel[relFitting]
+  rel <- rels[relFitting]
 
   # if there is only one fitting mapping make rel a data frame
   if (length(rel) == 1) {
