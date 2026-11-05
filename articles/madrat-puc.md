@@ -81,6 +81,20 @@ Aggregating from a puc-file can now happen in two ways:
 In both cases a new aggregated collection will be written into the
 outputfolder based on the given puc-file.
 
+## Creating a puc-file after the fact
+
+Sometimes a collection is computed without a puc-file
+(e.g. `retrieveData(..., puc = FALSE)`), or a puc-file could not be
+created at the time (e.g. because strict mode suppressed it due to
+warnings). As long as the madrat cache files that were used to compute
+the collection are still available on this machine, `pucCreate` can
+create the missing puc-file from the already-computed tgz-archive,
+without having to rerun the underlying calculations:
+
+``` r
+pucCreate("rev42_h12_5c275ce3_example.tgz")
+```
+
 ## Making a madrat preprocessing ready for puc-files
 
 While many parts of the puc-file creation happen automatically, some
@@ -155,6 +169,13 @@ will most likely result in a puc-file which is created but unusable
 (e.g. one could set `putInPUC` to `FALSE` for the calculation `TauTotal`
 which would render the resulting puc-file unusable). So proper
 configuration is key to functioning puc-files.
+
+Independent of the cache format configured on the creating machine (see
+[`vignette("madrat-caching")`](../articles/madrat-caching.md)), the
+cache files inside a puc-file are always stored as `rds` files,
+converted while the puc-file is being created. This keeps puc-files
+portable: they can be used without knowing which cache format was used
+to compute them and without installing any additional packages.
 
 On the user side, be aware that puc-files contain an `renv.lock` file,
 which lists the version of all dependencies that were used to generate

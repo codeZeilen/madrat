@@ -37,7 +37,7 @@ if no argument deviates from the default argument settings.
 
 ## See also
 
-[`cachePut`](cachePut.md), [`cacheName`](cacheName.md),
+[`cachePut`](cachePut.md), [`cacheNames`](cacheNames.md),
 [`getNonDefaultArguments`](getNonDefaultArguments.md)
 
 ## Author
@@ -56,7 +56,7 @@ madrat:::cacheArgumentsHash("madrat:::readTau", args = list(subtype = "historica
 #>     packages = madrat
 #>     globalenv = FALSE
 #>     verbosity = 1
-#>     mainfolder = /tmp/RtmpOWMq7A/madrat
+#>     mainfolder = /tmp/RtmpMWTTiz/madrat
 #>     sourcefolder = NA
 #>     cachefolder = NA
 #>     mappingfolder = NA
@@ -67,9 +67,11 @@ madrat:::cacheArgumentsHash("madrat:::readTau", args = list(subtype = "historica
 #>     forcecache = FALSE
 #>     ignorecache = NULL
 #>     cachecompression = gzip
+#>     cacheformat = rds
 #>     hash = xxhash32
 #>     diagnostics = FALSE
 #>     debug = FALSE
+#>     memoryprofiling = FALSE
 #>     maxLengthLogMessage = 200
 #> ..done!
 #> [1] "-50d72f51"

@@ -37,6 +37,8 @@ Functions for handling cached data
 
 - [`cacheCleanup()`](cacheCleanup.md) : cacheCleanup
 - [`cacheCopy()`](cacheCopy.md) : cacheCopy
+- [`registerCacheFormat()`](registerCacheFormat.md)
+  [`cacheFormats()`](registerCacheFormat.md) : registerCacheFormat
 
 ## Dependency Graph
 
@@ -61,6 +63,7 @@ Tools for working with mappings
 Spatial aggregation and disaggregation
 
 - [`pucAggregate()`](pucAggregate.md) : pucAggregate
+- [`pucCreate()`](pucCreate.md) : pucCreate
 - [`toolAggregate()`](toolAggregate.md) : toolAggregate
 
 ## Tools: Countries
@@ -154,6 +157,8 @@ Data validation and comparison tools
 Performance analysis tools
 
 - [`findBottlenecks()`](findBottlenecks.md) : findBottlenecks
+- [`findMemoryBottlenecks()`](findMemoryBottlenecks.md) :
+  findMemoryBottlenecks
 
 ## Example Functions
 
